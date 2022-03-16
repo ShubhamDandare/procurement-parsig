@@ -1,0 +1,38 @@
+trigger: 
+  - master
+
+name: "rcm-common-sourcing-service: $(Date:yyyyMMdd)$(Rev:.r)"
+
+pool:
+  name: Azure Pipelines
+  vmImage: ubuntu-20.04
+  demands: maven
+
+steps:
+- task: MavenAuthenticate@0
+  inputs:
+    artifactsFeeds: 'rcm-common-sourcing-service'
+    mavenServiceConnections: 'maven_build'
+
+- task: Maven@3
+  inputs:
+    mavenPomFile: 'pom.xml'
+    goals: 'deploy -Dversion=$(Build.BuildNumber)'
+    jdkVersionOption: '1.8'
+    jdkArchitectureOption: 'x64'
+    publishJUnitResults: false
+    mavenAuthenticateFeed: true
+
+- task: CopyFiles@2
+  inputs:
+    SourceFolder: '$(system.defaultworkingdirectory)'
+    Contents: '**/*.jar'
+    TargetFolder: '$(build.artifactstagingdirectory)/target-build'
+    CleanTargetFolder: true
+  condition: succeededOrFailed()
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(build.artifactstagingdirectory)/target-build'
+    ArtifactName: 'rcm-common-sourcing-service'
+  condition: succeededOrFailed()
