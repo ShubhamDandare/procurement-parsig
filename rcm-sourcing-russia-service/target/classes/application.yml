@@ -1,0 +1,125 @@
+spring:
+  application:
+    name: rcm-sourcing-russia-service
+    version: 1.0
+  datasource:
+    password: 1R3PYSO4m
+    url: jdbc:sqlserver://mssqlserver-dev-rcm-pr-rcmdbsrv.database.windows.net:1433;database=mssqldb-dev-rcm-pr-rcm-db;SelectMethod=cursor
+    username: mssqladmin
+  jpa:
+    hibernate.ddl-auto: update
+    
+table.name.suffix: russia
+
+server:
+  port: 8080
+
+config:
+  service:
+    api:
+      url: http://service-config-svc-dev.eastus.cloudapp.azure.com/
+
+filepath:
+  downloadedFileLocation: '/var/tmp/'
+  tempStoragePathForRecordChange: '/var/tmp/'
+  deleteAfterUpload: true
+
+azure:
+  containerName: 'sacontainerdevrcmprapp1'
+  connectionString: 'DefaultEndpointsProtocol=https;AccountName=sadevrcmprapp1;AccountKey=IoGD3NmgZWJEQ//L8HgwqMZMhYvMykXVG7osDJBh+bTBKkQMAPNM5gYXeDWU/n358gvtJG1nOSYq8LVFj4n9gQ==;EndpointSuffix=core.windows.net'
+  isAzureFileUploadEnable: true
+
+servicebus:
+  queueName: 'sbq-topic-dev-rcm-pr-app1'
+  connectionString: 'Endpoint=sb://sbns-dev-rcm-pr-app1.servicebus.windows.net/;SharedAccessKeyName=SendListenSASPolicy;SharedAccessKey=O0UjG8C3p/3AzvFd5EZlN1gEhZphBOwnt+UfiH84GxM=;EntityPath=sbq-topic-dev-rcm-pr-app1'
+  isServiceBusEnable: true
+  
+logging:
+  level:
+    org:
+      hibernate: WARN
+      springframework: WARN
+    com:
+      kpmg:
+        rcm:
+          sourcing:
+            russia: INFO
+            common: INFO
+    root: ERROR
+  file:
+    name: ${filepath.downloadedFileLocation}/log/kpmg.log
+  logback:
+    rollingpolicy:
+      max-history: 10
+      max-file-size: 20MB
+  pattern:
+    console: "%d %-5level %logger |%X{requestId}| %msg%n"
+    file: "%d %-5level [%thread] %logger |%X{requestId}| %msg%n"
+    rolling-file-name: "${LOG_FILE}.%d{yyyy-MM-dd}.%i"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    shutdown:
+      enabled: true
+      
+procurement:
+  restart:
+    fr: false
+        
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+      
+  h2:
+    console:
+      enabled: 'true'
+  datasource:
+    url: jdbc:h2:file:D:/var/tmp/kpmg.db;MODE=MSSQLServer
+    username: sa
+    password: password
+    driverClassName: org.h2.Driver
+    platform: h2
+    
+  jpa:
+    hibernate.ddl-auto: update
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: false
+    
+server:
+  port: 8085
+  
+filepath:
+  downloadedFileLocation: 'D:/var/tmp/'
+  tempStoragePathForRecordChange: 'D:/var/tmp/'
+  
+config:
+  service:
+    api:
+      url: http://service-config-svc-dev.eastus.cloudapp.azure.com/
+      
+logging:
+  level:
+    org:
+      hibernate: WARN
+      springframework: WARN
+    com:
+      kpmg:
+        rcm:
+          sourcing:
+            russia: INFO
+            common: INFO
+    root: INFO
+  file:
+    name: ${filepath.downloadedFileLocation}/kpmg.log
+    
+#For local profile following properties are useless and will always be false. 
+#Record change and procurement data will be stored in local H2 database and no azure call will happen for local profile.
+#filepath.deleteAfterUpload: false
+#azure.isAzureFileUploadEnable: false
+#servicebus.isServiceBusEnable: false
